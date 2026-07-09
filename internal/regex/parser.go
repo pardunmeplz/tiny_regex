@@ -25,9 +25,13 @@ type ParserState struct {
 }
 
 func parse(input string) Node {
-	parserState := ParserState{input, 0, []string{}}
+	parserState := &ParserState{input, 0, []string{}}
 
-	return regex(&parserState)
+	out := regex(parserState)
+	if pending(parserState) {
+		addError(parserState, "Invalid characters at end of regex")
+	}
+	return out
 }
 
 func regex(parserState *ParserState) Node {
@@ -49,7 +53,7 @@ func alternation(parserState *ParserState) Node {
 }
 func concatination(parserState *ParserState) Node {
 	left := repetition(parserState)
-	for pending(parserState) && peek(parserState) != '|' {
+	for pending(parserState) && peek(parserState) != '|' && peek(parserState) != ')' {
 		right := repetition(parserState)
 		if left.nodeType == CONCAT {
 			left.children = append(left.children, right)
