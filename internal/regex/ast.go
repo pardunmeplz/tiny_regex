@@ -13,5 +13,6 @@ const (
 type Node struct {
 	nodeType NodeType
 	value    rune
-	children []Node
+	Left     *Node
+	Right    *Node
 }

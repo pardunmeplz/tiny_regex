@@ -43,11 +43,7 @@ func alternation(parserState *ParserState) Node {
 	for pending(parserState) && peek(parserState) == '|' {
 		advance(parserState)
 		right := concatination(parserState)
-		if left.nodeType == ALT {
-			left.children = append(left.children, right)
-		} else {
-			left = Node{ALT, ' ', []Node{left, right}}
-		}
+		left = Node{ALT, ' ', &left, &right}
 	}
 	return left
 }
@@ -55,11 +51,7 @@ func concatination(parserState *ParserState) Node {
 	left := repetition(parserState)
 	for pending(parserState) && peek(parserState) != '|' && peek(parserState) != ')' {
 		right := repetition(parserState)
-		if left.nodeType == CONCAT {
-			left.children = append(left.children, right)
-		} else {
-			left = Node{CONCAT, ' ', []Node{left, right}}
-		}
+		left = Node{CONCAT, ' ', &left, &right}
 	}
 	return left
 }
@@ -68,7 +60,7 @@ func repetition(parserState *ParserState) Node {
 	left := primary(parserState)
 	for pending(parserState) && peek(parserState) == '*' {
 		advance(parserState)
-		left = Node{REPEAT, ' ', []Node{left}}
+		left = Node{REPEAT, ' ', &left, nil}
 	}
 	return left
 }
@@ -76,7 +68,8 @@ func repetition(parserState *ParserState) Node {
 func primary(parserState *ParserState) Node {
 	char := advance(parserState)
 	if char == '(' {
-		grp := Node{GROUP, ' ', []Node{regex(parserState)}}
+		left := regex(parserState)
+		grp := Node{GROUP, ' ', &left, nil}
 		consume(parserState, ')', "Expected closing paranthesis ')'")
 		return grp
 	}
@@ -86,7 +79,7 @@ func primary(parserState *ParserState) Node {
 		return Node{}
 	}
 
-	return Node{LITERAL, char, nil}
+	return Node{LITERAL, char, nil, nil}
 }
 
 func peek(parserState *ParserState) rune {
