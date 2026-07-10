@@ -41,3 +41,19 @@ func repeatNfa(repeat NFA) NFA {
 
 	return out
 }
+
+func thompsonConstruction(node Node) NFA {
+	switch node.nodeType {
+	case LITERAL:
+		return literalNfa(node.value)
+	case CONCAT:
+		return concatinationNfa(thompsonConstruction(*node.Left), thompsonConstruction(*node.Right))
+	case ALT:
+		return alterationNfa(thompsonConstruction(*node.Left), thompsonConstruction(*node.Right))
+	case REPEAT:
+		return repeatNfa(thompsonConstruction(*node.Left))
+	case GROUP:
+		return thompsonConstruction(*node.Left)
+	}
+	return NFA{}
+}

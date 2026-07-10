@@ -24,14 +24,14 @@ type ParserState struct {
 	error []string
 }
 
-func parse(input string) Node {
+func parse(input string) (Node, []string) {
 	parserState := &ParserState{input, 0, []string{}}
 
 	out := regex(parserState)
 	if pending(parserState) {
 		addError(parserState, "Invalid characters at end of regex")
 	}
-	return out
+	return out, parserState.error
 }
 
 func regex(parserState *ParserState) Node {
@@ -39,30 +39,33 @@ func regex(parserState *ParserState) Node {
 }
 
 func alternation(parserState *ParserState) Node {
-	left := concatination(parserState)
+	out := concatination(parserState)
 	for pending(parserState) && peek(parserState) == '|' {
 		advance(parserState)
 		right := concatination(parserState)
-		left = Node{ALT, ' ', &left, &right}
+		left := out
+		out = Node{ALT, ' ', &left, &right}
 	}
-	return left
+	return out
 }
 func concatination(parserState *ParserState) Node {
-	left := repetition(parserState)
+	out := repetition(parserState)
 	for pending(parserState) && peek(parserState) != '|' && peek(parserState) != ')' {
 		right := repetition(parserState)
-		left = Node{CONCAT, ' ', &left, &right}
+		left := out
+		out = Node{CONCAT, ' ', &left, &right}
 	}
-	return left
+	return out
 }
 
 func repetition(parserState *ParserState) Node {
-	left := primary(parserState)
+	out := primary(parserState)
 	for pending(parserState) && peek(parserState) == '*' {
 		advance(parserState)
-		left = Node{REPEAT, ' ', &left, nil}
+		left := out
+		out = Node{REPEAT, ' ', &left, nil}
 	}
-	return left
+	return out
 }
 
 func primary(parserState *ParserState) Node {
