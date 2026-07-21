@@ -15,7 +15,7 @@ type NFA struct {
 type Visited map[[2]*State]struct{}
 
 func literalNfa(value rune) NFA {
-	out := NFA{&State{}, &State{}}
+	out := NFA{&State{map[rune]*State{}, map[*State]struct{}{}}, &State{map[rune]*State{}, map[*State]struct{}{}}}
 	out.Start.Transitions[value] = out.Accept
 	return out
 }
@@ -27,7 +27,7 @@ func concatinationNfa(left NFA, right NFA) NFA {
 }
 
 func alterationNfa(left NFA, right NFA) NFA {
-	out := NFA{&State{}, &State{}}
+	out := NFA{&State{map[rune]*State{}, map[*State]struct{}{}}, &State{map[rune]*State{}, map[*State]struct{}{}}}
 	out.Start.Epsilons[left.Start] = struct{}{}
 	out.Start.Epsilons[right.Start] = struct{}{}
 
@@ -37,7 +37,7 @@ func alterationNfa(left NFA, right NFA) NFA {
 }
 
 func repeatNfa(repeat NFA) NFA {
-	out := NFA{&State{}, &State{}}
+	out := NFA{&State{map[rune]*State{}, map[*State]struct{}{}}, &State{map[rune]*State{}, map[*State]struct{}{}}}
 	out.Start.Epsilons[out.Accept] = struct{}{}
 	out.Start.Epsilons[repeat.Start] = struct{}{}
 
