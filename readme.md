@@ -40,8 +40,7 @@ This project targets **classic regular expressions** — the kind that define re
 
 **Precedence** (lowest to highest): alternation → concatenation → repetition.
 
-**Reserved characters:** `( )
-`)`, `|`, `*` — use grouping and operators only in their syntactic roles.
+**Reserved characters:** `(`, `)`, `|`, `*` — use grouping and operators only in their syntactic roles.
 
 Examples:
 
@@ -55,70 +54,85 @@ a*|b*       matches any string of only a's, only b's, or empty
 
 ```
 regex/
-├── cmd/matcher/          CLI entry point (planned)
-├── internal/regex/
-│   ├── parser.go         Recursive-descent parser
-│   └── ast.go            AST node types
+├── cmd/matcher/              CLI: two regex args → true/false
+├── internal/regexEval/
+│   ├── ast.go                AST node types
+│   ├── parser.go             Recursive-descent parser
+│   ├── nfa.go                Thompson construction, ε-NFA, product search
+│   └── main.go               Entry API: HasUnion
 └── go.mod
 ```
-
-Planned additions under `internal/regex/`:
-
-- `nfa.go` — Thompson construction and ε-NFA representation
-- `product.go` — product automaton and intersection search
-- `intersect.go` — public API: `Intersects(r, s string) (bool, error)`
 
 ## Status
 
 | Stage | Status |
 |-------|--------|
-| Parser → AST | In progress |
-| Thompson construction | Planned |
-| Product automaton search | Planned |
-| CLI / public API | Planned |
+| Parser → AST | Done |
+| Thompson construction | Done |
+| Product automaton search | Done |
+| CLI | Done |
 
-## Usage (planned)
+## Usage
+
+**Library** (within this module — `internal/regexEval` is not importable outside `regex/`):
 
 ```go
 package main
 
 import (
     "fmt"
-    "regex/internal/regex"
+    rx "regex/internal/regexEval"
 )
 
 func main() {
-    ok, err := regex.Intersects(`a(b|c)*`, `ab*`)
-    if err != nil {
-        panic(err)
+    ok, errs := rx.HasUnion(`a(b|c)*`, `ab*`)
+    if len(errs) > 0 {
+        panic(errs)
     }
     fmt.Println(ok) // true — both match "a", "ab", "abb", …
 }
 ```
 
+**CLI:**
+
 ```bash
 go run ./cmd/matcher 'a(b|c)*' 'ab*'
 # true
+
+go run ./cmd/matcher 'ab' 'c*'
+# false
 ```
+
+`HasUnion` returns `(bool, []string)`: the boolean is whether the languages intersect; the slice holds parse errors (empty on success).
 
 ## Development
 
 Requires Go 1.24+.
 
 ```bash
-go test ./...
 go build ./...
+go run ./cmd/matcher 'a|b' 'b|c'
 ```
+
+There are no automated tests yet; add `_test.go` files under `internal/regexEval` as you extend the language.
 
 ## How it works
 
-**Thompson construction** compiles each AST into an ε-NFA with a single start state and a single accept state. Each grammar construct maps to a small fragment:
+**Thompson construction** (`thompsonConstruction`) compiles each AST node into an ε-NFA fragment with a single start and a single accept state:
 
 - Literal → two states, one labeled transition
-- Concatenation → connect fragments in series
-- Alternation → ε-branch between two fragments
-- Star → ε-loop back to the fragment
+- Concatenation → ε-link from the left accept to the right start
+- Alternation → new start ε-branches to both fragments; both accepts ε-link to a new accept
+- Kleene star → ε-skip to accept, ε-enter fragment, loop back, ε-exit to accept
+- Grouping → compile the inner node (no extra states)
 
-**Product automaton** — given NFAs `M₁ = (Q₁, Σ, δ₁, q₀₁, F₁)` and `M₂ = (Q₂, Σ, δ₂, q₀₂, F₂)`, build `M₁ × M₂` with states `(q, p) ∈ Q₁ × Q₂`. A pair is accepting when `q ∈ F₁` and `p ∈ F₂`. `(q₀₁, q₀₂)` is reachable in the product iff the two languages intersect.
+States store labeled moves in `Transitions map[rune]*State` and ε-moves in `Epsilons map[*State]struct{}`.
 
-Because both NFAs may have ε-transitions, reachability uses a subset construction or ε-closure-aware search rather than a plain BFS on labeled edges alone.
+**Product search** (`evaluateNfaProduct`) asks whether some pair `(q, p)` is reachable where `q` is accepting in the first NFA and `p` in the second. At each step it:
+
+1. Takes the ε-closure of the current state pair (`flattenEpsilonTransitions` on each side).
+2. If any pair in the product of those closures is `(Accept₁, Accept₂)`, returns `true`.
+3. Otherwise, for every symbol that appears on a transition from both sides, recurses on the pair of target states in sync.
+4. Uses a visited set on `(stateA, stateB)` to avoid infinite ε-loops.
+
+Because both NFAs may have ε-transitions, reachability is ε-closure-aware rather than plain labeled-edge BFS alone.
