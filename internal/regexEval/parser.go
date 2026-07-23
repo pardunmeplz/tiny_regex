@@ -72,7 +72,7 @@ func repetition(parserState *ParserState) Node {
 
 func primary(parserState *ParserState) Node {
 
-	if eof(parserState) {
+	if eof(parserState) || peekMatch(parserState, '|') {
 		return Node{EPSILON, ' ', nil, nil}
 	}
 
@@ -119,4 +119,8 @@ func consume(parserState *ParserState, ch rune, messsage string) {
 	} else {
 		advance(parserState)
 	}
+}
+
+func peekMatch(parserState *ParserState, ch rune) bool {
+	return ch == peek(parserState)
 }

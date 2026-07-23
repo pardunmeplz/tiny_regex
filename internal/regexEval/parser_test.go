@@ -10,6 +10,7 @@ var positiveTests = []struct {
 	result *Node
 }{
 	{"AB|", &Node{ALT, ' ', &Node{CONCAT, ' ', &Node{LITERAL, 'A', nil, nil}, &Node{LITERAL, 'B', nil, nil}}, &Node{EPSILON, ' ', nil, nil}}},
+	{"|BA", &Node{ALT, ' ', &Node{EPSILON, ' ', nil, nil}, &Node{CONCAT, ' ', &Node{LITERAL, 'B', nil, nil}, &Node{LITERAL, 'A', nil, nil}}}},
 	{"AB|C", &Node{ALT, ' ', &Node{CONCAT, ' ', &Node{LITERAL, 'A', nil, nil}, &Node{LITERAL, 'B', nil, nil}}, &Node{LITERAL, 'C', nil, nil}}},
 	{"A(B|C)", &Node{CONCAT, ' ', &Node{LITERAL, 'A', nil, nil}, &Node{GROUP, ' ', &Node{ALT, ' ', &Node{LITERAL, 'B', nil, nil}, &Node{LITERAL, 'C', nil, nil}}, nil}}},
 	{"(AB|C)", &Node{GROUP, ' ', &Node{ALT, ' ', &Node{CONCAT, ' ', &Node{LITERAL, 'A', nil, nil}, &Node{LITERAL, 'B', nil, nil}}, &Node{LITERAL, 'C', nil, nil}}, nil}},
