@@ -1,0 +1,74 @@
+package regex
+
+import (
+	"strings"
+	"testing"
+)
+
+var positiveTests = []struct {
+	regex  string
+	result *Node
+}{
+	{"AB|", &Node{ALT, ' ', &Node{CONCAT, ' ', &Node{LITERAL, 'A', nil, nil}, &Node{LITERAL, 'B', nil, nil}}, &Node{EPSILON, ' ', nil, nil}}},
+	{"AB|C", &Node{ALT, ' ', &Node{CONCAT, ' ', &Node{LITERAL, 'A', nil, nil}, &Node{LITERAL, 'B', nil, nil}}, &Node{LITERAL, 'C', nil, nil}}},
+	{"A(B|C)", &Node{CONCAT, ' ', &Node{LITERAL, 'A', nil, nil}, &Node{GROUP, ' ', &Node{ALT, ' ', &Node{LITERAL, 'B', nil, nil}, &Node{LITERAL, 'C', nil, nil}}, nil}}},
+	{"(AB|C)", &Node{GROUP, ' ', &Node{ALT, ' ', &Node{CONCAT, ' ', &Node{LITERAL, 'A', nil, nil}, &Node{LITERAL, 'B', nil, nil}}, &Node{LITERAL, 'C', nil, nil}}, nil}},
+	{"AB*|C", &Node{ALT, ' ', &Node{CONCAT, ' ', &Node{LITERAL, 'A', nil, nil}, &Node{REPEAT, ' ', &Node{LITERAL, 'B', nil, nil}, nil}}, &Node{LITERAL, 'C', nil, nil}}},
+	{"(A|B)*|C", &Node{ALT, ' ', &Node{REPEAT, ' ', &Node{GROUP, ' ', &Node{ALT, ' ', &Node{LITERAL, 'A', nil, nil}, &Node{LITERAL, 'B', nil, nil}}, nil}, nil}, &Node{LITERAL, 'C', nil, nil}}},
+}
+
+var negativeTests = []struct {
+	regex string
+	errs  []string
+}{
+	{"AB|C", []string{}},
+}
+
+func TestPositive(t *testing.T) {
+	for _, test := range positiveTests {
+		out, err := parse(test.regex)
+		if len(err) > 0 {
+			t.Errorf("%s has invalid errors %s", test.regex, err)
+		}
+		if !matchNodes(test.result, &out) {
+			t.Errorf("%s has invalid output %s expected %s", test.regex, printNode(&out), printNode(test.result))
+		}
+	}
+}
+
+func matchNodes(A *Node, B *Node) bool {
+	if A == nil || B == nil {
+		return A == B
+	}
+	return A.value == B.value && A.nodeType == B.nodeType && matchNodes(A.Left, B.Left) && matchNodes(A.Right, B.Right)
+}
+
+func printNode(A *Node) string {
+	if A == nil {
+		return "{}"
+	}
+	out := strings.Builder{}
+	out.WriteString("{")
+	switch A.nodeType {
+	case LITERAL:
+		out.WriteString("LITERAL")
+		out.WriteString(",")
+		out.WriteRune(A.value)
+	case CONCAT:
+		out.WriteString("CONCAT")
+	case ALT:
+		out.WriteString("ALT")
+	case REPEAT:
+		out.WriteString("REPEAT")
+	case GROUP:
+		out.WriteString("GROUP")
+	}
+
+	out.WriteString(",")
+	out.WriteString(printNode(A.Left))
+	out.WriteString(",")
+	out.WriteString(printNode(A.Right))
+	out.WriteString("}")
+
+	return out.String()
+}
