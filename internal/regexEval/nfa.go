@@ -47,6 +47,12 @@ func repeatNfa(repeat NFA) NFA {
 	return out
 }
 
+func blankEpsilonNfa() NFA {
+	out := NFA{&State{map[rune]*State{}, map[*State]struct{}{}}, &State{map[rune]*State{}, map[*State]struct{}{}}}
+	out.Start.Epsilons[out.Accept] = struct{}{}
+	return out
+}
+
 func thompsonConstruction(node Node) NFA {
 	switch node.nodeType {
 	case LITERAL:
@@ -59,6 +65,9 @@ func thompsonConstruction(node Node) NFA {
 		return repeatNfa(thompsonConstruction(*node.Left))
 	case GROUP:
 		return thompsonConstruction(*node.Left)
+	case EPSILON:
+		return blankEpsilonNfa()
 	}
+
 	return NFA{}
 }

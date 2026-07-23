@@ -8,6 +8,7 @@ const (
 	ALT     NodeType = 3
 	REPEAT  NodeType = 4
 	GROUP   NodeType = 5
+	EPSILON NodeType = 6
 )
 
 type Node struct {

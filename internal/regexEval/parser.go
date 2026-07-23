@@ -14,7 +14,9 @@ Repetition     ::= Primary ( "*" )*
 Primary        ::= Literal
                  | "(" Regex ")"
 
-Literal        ::= <any character except '(', ')', '|', '*'>
+Literal        ::= <any character except '(', ')', '|', '*'> | Epsilon
+
+Epsilon        ::= ''
 
 */
 
@@ -69,6 +71,11 @@ func repetition(parserState *ParserState) Node {
 }
 
 func primary(parserState *ParserState) Node {
+
+	if eof(parserState) {
+		return Node{EPSILON, ' ', nil, nil}
+	}
+
 	char := advance(parserState)
 	if char == '(' {
 		left := regex(parserState)
@@ -92,6 +99,10 @@ func peek(parserState *ParserState) rune {
 func advance(parserState *ParserState) rune {
 	parserState.index++
 	return rune(parserState.input[parserState.index-1])
+}
+
+func eof(parserState *ParserState) bool {
+	return parserState.index >= len(parserState.input)
 }
 
 func pending(parserState *ParserState) bool {
