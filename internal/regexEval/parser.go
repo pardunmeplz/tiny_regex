@@ -78,8 +78,14 @@ func primary(parserState *ParserState) Node {
 
 	char := advance(parserState)
 	if char == '(' {
-		left := regex(parserState)
-		grp := Node{GROUP, ' ', &left, nil}
+		grp := Node{GROUP, ' ', nil, nil}
+		if peekMatch(parserState, ')') {
+			grp.Left = &Node{EPSILON, ' ', nil, nil}
+		} else {
+			left := regex(parserState)
+			grp.Left = &left
+		}
+
 		consume(parserState, ')', "Expected closing paranthesis ')'")
 		return grp
 	}
