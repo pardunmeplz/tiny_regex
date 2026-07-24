@@ -1,6 +1,7 @@
 package regex
 
 import (
+	"slices"
 	"strings"
 	"testing"
 )
@@ -24,7 +25,10 @@ var negativeTests = []struct {
 	regex string
 	errs  []string
 }{
-	{"AB|C", []string{}},
+	{")", []string{}},
+	{"(", []string{}},
+	{"c(a|b", []string{}},
+	{"c)a|b", []string{}},
 }
 
 func TestPositive(t *testing.T) {
@@ -35,6 +39,15 @@ func TestPositive(t *testing.T) {
 		}
 		if !matchNodes(test.result, &out) {
 			t.Errorf("%s has invalid output %s expected %s", test.regex, printNode(&out), printNode(test.result))
+		}
+	}
+}
+
+func TestNegative(t *testing.T) {
+	for _, test := range negativeTests {
+		_, err := parse(test.regex)
+		if !slices.EqualFunc(err, test.errs, func(a string, b string) bool { return a == b }) {
+			t.Errorf("%s has invalid errors %s", test.regex, err)
 		}
 	}
 }

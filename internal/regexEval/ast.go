@@ -17,3 +17,9 @@ type Node struct {
 	Left     *Node
 	Right    *Node
 }
+
+const (
+	MISSING_GROUP_END = "Expected closing paranthesis ')'"
+	UNEXPECTED_CHAR   = "Unexpected character %s"
+	EXPECTED_EOF      = "Unexpected characters at end of regex"
+)

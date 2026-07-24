@@ -1,5 +1,7 @@
 package regex
 
+import "fmt"
+
 /*
 Minimal Regex Language Grammero
 
@@ -31,7 +33,7 @@ func parse(input string) (Node, []string) {
 
 	out := regex(parserState)
 	if pending(parserState) {
-		addError(parserState, "Invalid characters at end of regex")
+		addError(parserState, EXPECTED_EOF)
 	}
 	return out, parserState.error
 }
@@ -86,12 +88,12 @@ func primary(parserState *ParserState) Node {
 			grp.Left = &left
 		}
 
-		consume(parserState, ')', "Expected closing paranthesis ')'")
+		consume(parserState, ')', MISSING_GROUP_END)
 		return grp
 	}
 
 	if char == ')' || char == '|' || char == '*' {
-		addError(parserState, "Unexpected character "+string(char))
+		addError(parserState, fmt.Sprintf(UNEXPECTED_CHAR, string(char)))
 		return Node{}
 	}
 
