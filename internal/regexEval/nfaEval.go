@@ -16,6 +16,7 @@ func eval(string string, nfa NFA) bool {
 		currState = transition(currState, ch)
 	}
 
+	currState = flattenEpsilonsInSet(currState)
 	_, win := currState[nfa.Accept]
 
 	return win
