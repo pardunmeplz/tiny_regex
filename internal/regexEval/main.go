@@ -12,3 +12,13 @@ func HasUnion(regexA string, regexB string) (bool, []string) {
 
 	return evaluateNfaProduct(nfaA, nfaB), nil
 }
+
+func Matches(regex string, input string) (bool, []string) {
+	ast, err := parse(regex)
+	if len(err) > 0 {
+		return false, err
+	}
+
+	nfa := thompsonConstruction(ast)
+	return eval(input, nfa), nil
+}

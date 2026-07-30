@@ -1,5 +1,7 @@
 package regex
 
+type Visited map[[2]*State]struct{}
+
 func evaluateNfaProduct(a NFA, b NFA) bool {
 	return evaluateProduct(a.Start, b.Start, a.Accept, b.Accept, Visited{})
 }
@@ -38,8 +40,8 @@ func evaluateProduct(A *State, B *State, winA *State, winB *State, visited Visit
 	return false
 }
 
-func flattenEpsilonTransitions(A *State) map[*State]struct{} {
-	out := map[*State]struct{}{}
+func flattenEpsilonTransitions(A *State) StateSet {
+	out := StateSet{}
 	out[A] = struct{}{}
 	for {
 		outLen := len(out)

@@ -3,19 +3,20 @@ package regex
 type State struct {
 	// the reason we don't need a list of state is that one transition leading to multiple states is always handled by epsilons
 	// in case o rune leads to multiple states, you end up having it transition to one intermediate state with many epsilons transitions instead
-	Transitions map[rune]*State
-	Epsilons    map[*State]struct{}
+	Transitions TransitionSet
+	Epsilons    StateSet
 }
+
+type StateSet map[*State]struct{}
+type TransitionSet map[rune]*State
 
 type NFA struct {
 	Start  *State
 	Accept *State
 }
 
-type Visited map[[2]*State]struct{}
-
 func literalNfa(value rune) NFA {
-	out := NFA{&State{map[rune]*State{}, map[*State]struct{}{}}, &State{map[rune]*State{}, map[*State]struct{}{}}}
+	out := NFA{&State{TransitionSet{}, StateSet{}}, &State{TransitionSet{}, StateSet{}}}
 	out.Start.Transitions[value] = out.Accept
 	return out
 }
@@ -27,7 +28,7 @@ func concatinationNfa(left NFA, right NFA) NFA {
 }
 
 func alterationNfa(left NFA, right NFA) NFA {
-	out := NFA{&State{map[rune]*State{}, map[*State]struct{}{}}, &State{map[rune]*State{}, map[*State]struct{}{}}}
+	out := NFA{&State{TransitionSet{}, StateSet{}}, &State{TransitionSet{}, StateSet{}}}
 	out.Start.Epsilons[left.Start] = struct{}{}
 	out.Start.Epsilons[right.Start] = struct{}{}
 
@@ -37,7 +38,7 @@ func alterationNfa(left NFA, right NFA) NFA {
 }
 
 func repeatNfa(repeat NFA) NFA {
-	out := NFA{&State{map[rune]*State{}, map[*State]struct{}{}}, &State{map[rune]*State{}, map[*State]struct{}{}}}
+	out := NFA{&State{TransitionSet{}, StateSet{}}, &State{TransitionSet{}, StateSet{}}}
 	out.Start.Epsilons[out.Accept] = struct{}{}
 	out.Start.Epsilons[repeat.Start] = struct{}{}
 
@@ -48,7 +49,7 @@ func repeatNfa(repeat NFA) NFA {
 }
 
 func blankEpsilonNfa() NFA {
-	out := NFA{&State{map[rune]*State{}, map[*State]struct{}{}}, &State{map[rune]*State{}, map[*State]struct{}{}}}
+	out := NFA{&State{TransitionSet{}, StateSet{}}, &State{TransitionSet{}, StateSet{}}}
 	out.Start.Epsilons[out.Accept] = struct{}{}
 	return out
 }
