@@ -1,4 +1,4 @@
-package regex
+package tinyregex
 
 type State struct {
 	// the reason we don't need a list of state is that one transition leading to multiple states is always handled by epsilons

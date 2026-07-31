@@ -1,4 +1,4 @@
-package regex
+package tinyregex
 
 func HasUnion(regexA string, regexB string) (bool, []string) {
 	astA, errA := parse(regexA)

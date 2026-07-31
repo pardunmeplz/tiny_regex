@@ -1,4 +1,4 @@
-package regex
+package tinyregex
 
 type NodeType int
 

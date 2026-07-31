@@ -1,4 +1,4 @@
-package regex
+package tinyregex
 
 type Visited map[[2]*State]struct{}
 

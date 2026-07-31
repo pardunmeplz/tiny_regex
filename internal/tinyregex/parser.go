@@ -1,4 +1,4 @@
-package regex
+package tinyregex
 
 import "fmt"
 
