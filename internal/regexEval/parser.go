@@ -33,7 +33,7 @@ func parse(input string) (Node, []string) {
 
 	out := regex(parserState)
 	if pending(parserState) {
-		addError(parserState, EXPECTED_EOF)
+		addError(parserState, fmt.Sprintf(UNEXPECTED_CHAR, string(peek(parserState))))
 	}
 	return out, parserState.error
 }
@@ -122,7 +122,7 @@ func addError(parserState *ParserState, message string) {
 }
 
 func consume(parserState *ParserState, ch rune, messsage string) {
-	if peek(parserState) != ch {
+	if !pending(parserState) || peek(parserState) != ch {
 		addError(parserState, messsage)
 	} else {
 		advance(parserState)
@@ -130,5 +130,5 @@ func consume(parserState *ParserState, ch rune, messsage string) {
 }
 
 func peekMatch(parserState *ParserState, ch rune) bool {
-	return ch == peek(parserState)
+	return pending(parserState) && ch == peek(parserState)
 }

@@ -1,6 +1,7 @@
 package regex
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 	"testing"
@@ -25,10 +26,10 @@ var negativeTests = []struct {
 	regex string
 	errs  []string
 }{
-	{")", []string{}},
-	{"(", []string{}},
-	{"c(a|b", []string{}},
-	{"c)a|b", []string{}},
+	{")", []string{fmt.Sprintf(UNEXPECTED_CHAR, ")")}},
+	{"(", []string{MISSING_GROUP_END}},
+	{"c(a|b", []string{MISSING_GROUP_END}},
+	{"c)a|b", []string{fmt.Sprintf(UNEXPECTED_CHAR, ")")}},
 }
 
 func TestPositive(t *testing.T) {
